@@ -1,20 +1,23 @@
-## This function creates a special "matrix" object that can cache its inverse. It can be used as a generator function
-## for a class of matrixes with cached inverses.
-
+## This is a function that given a single matrix class object  creates a special "matrix" object that can cache its inverse.
 makeCacheMatrix <- function(x = matrix()) {
   inv <- NULL
-  set <- function(y){
-    x <<- y
-    inv <<- NULL
+  set <- function(y){    
+    ## In this point we assign the values y,NULL to the "global" variables x,inv. Those variable "exists" in the environment 
+    ## outside the function set. For that we use the the super assign operator '<<-'. 
+    x <<- y ## x is refered to here as a variable of the parent environment. On the other hand y exists only inside the function
+            ## and is interchangable.
+    inv <<- NULL ## We set inv to NULL in case of a change in x so we will have to recalculate inv in cacheSolve.
   }
   
-  get <- function() x
+  get <- function() x 
   
-  setinv <- function(y){
-    inv <<- y
-  }
+  setinv <- function(y) inv <<- y
+  
   
   getinv <- function() inv
+  list(set = set, get = get,
+       setinv = setinv,
+       getinv = getinv)
 
 }
 
@@ -25,16 +28,13 @@ makeCacheMatrix <- function(x = matrix()) {
 
 cacheSolve <- function(x, ...) {
   inv <- x$getinv()
-  if (!is.null(inv) && matequal(x,x$get())){  ## we check if the inverse has been calculated already or the matrix has changed 
+  ## we check if the inverse has been calculated already or the matrix has changed
+  if (!is.null(inv)){  
     message('Getting cached data')
     return(inv)
   }
-  inv <- solve(x)
+  data <- x$get()
+  inv <- solve(data,...)
   x$setinv(inv)
   inv
-}
-## this function is used to check that two matrices are identical regardless of the name of their dimension (thats why we dont 
-## use functions like identical() )
-matequal <- function(x, y){
-  is.matrix(x) && is.matrix(y) && dim(x) == dim(y) && all(x == y)
 }
